@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Users, Plus, Receipt, Eye } from "lucide-react"
-import type { Group, User, GroupDetail, Balance } from "@/lib/types"
+import type { Group, User, GroupDetail, Balance } from "@/lib/type"
 import { api } from "@/lib/api"
 import { GroupDetailModal } from "./group-detail-modal"
 
 interface GroupCardProps {
-    group: Group
+    group: Group & { users?: User[]; total_expenses?: number }
     users: User[]
     currentUserId: number
     onAddExpense: (groupId: number) => void
@@ -43,26 +43,17 @@ export function GroupCard({ group, users, currentUserId, onAddExpense }: GroupCa
         }
     }
 
-    const groupUsers = users.filter((user) => group.user_ids.includes(user.id))
+    // Use group.users if available (from dashboard), otherwise filter from users prop
+    const groupUsers = group.users || users.filter((user) => (group.user_ids || []).includes(user.id))
     const userBalance = balances.find((b) => b.user_id === currentUserId)
-    const totalExpenses = groupDetail?.total_expenses || 0
+    const totalExpenses = group.total_expenses || groupDetail?.total_expenses || 0
 
     return (
         <>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg font-semibold truncate">{group.name}</CardTitle>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setShowDetail(true)
-                            }}
-                        >
-                            <Eye className="w-4 h-4" />
-                        </Button>
+                        <CardTitle className="text-lg font-semibold truncate">{group.name || "Unnamed Group"}</CardTitle>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <Users className="w-4 h-4" />
@@ -79,7 +70,7 @@ export function GroupCard({ group, users, currentUserId, onAddExpense }: GroupCa
                         {groupUsers.slice(0, 4).map((user) => (
                             <Avatar key={user.id} className="w-8 h-8 border-2 border-white">
                                 <AvatarFallback className="text-xs">
-                                    {user.name
+                                    {(user.name || "?")
                                         .split(" ")
                                         .map((n) => n[0])
                                         .join("")}
@@ -98,10 +89,10 @@ export function GroupCard({ group, users, currentUserId, onAddExpense }: GroupCa
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">Your balance:</span>
                             <Badge
-                                variant={userBalance.amount >= 0 ? "default" : "destructive"}
-                                className={userBalance.amount >= 0 ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
+                                variant={(userBalance.amount || 0) >= 0 ? "default" : "destructive"}
+                                className={(userBalance.amount || 0) >= 0 ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
                             >
-                                {userBalance.amount >= 0 ? "+" : ""}${userBalance.amount.toFixed(2)}
+                                {(userBalance.amount || 0) >= 0 ? "+" : ""}${(userBalance.amount || 0).toFixed(2)}
                             </Badge>
                         </div>
                     )}
@@ -121,13 +112,14 @@ export function GroupCard({ group, users, currentUserId, onAddExpense }: GroupCa
                             Add Expense
                         </Button>
                         <Button
-                            variant="ghost"
                             size="sm"
+                            className="flex-1"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 setShowDetail(true)
                             }}
                         >
+                            <Eye className="w-4 h-4 mr-1" />
                             View Details
                         </Button>
                     </div>

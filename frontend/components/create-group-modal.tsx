@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Users, Plus, Loader2 } from "lucide-react"
-import type { User } from "@/lib/types"
+import type { User } from "@/lib/type"
 import { api } from "@/lib/api"
 
 interface CreateGroupModalProps {
@@ -26,6 +26,15 @@ export function CreateGroupModal({ open, onOpenChange, users, onGroupCreated }: 
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([1001]) // Always include current user
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
+
+    // Reset form only when modal is closed
+    useEffect(() => {
+        if (!open) {
+            setGroupName("")
+            setSelectedUserIds([1001])
+            setError("")
+        }
+    }, [open])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -50,8 +59,8 @@ export function CreateGroupModal({ open, onOpenChange, users, onGroupCreated }: 
             })
 
             // Reset form
-            setGroupName("")
-            setSelectedUserIds([1001])
+            // setGroupName("")
+            // setSelectedUserIds([1001])
             onGroupCreated()
         } catch (error) {
             setError("Failed to create group. Please try again.")
@@ -78,6 +87,9 @@ export function CreateGroupModal({ open, onOpenChange, users, onGroupCreated }: 
                         <span>Create New Group</span>
                     </DialogTitle>
                 </DialogHeader>
+                <DialogDescription className="mb-4">
+                    Create a group to split expenses with selected members. You must select at least one other member.
+                </DialogDescription>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Group Name */}
@@ -114,7 +126,7 @@ export function CreateGroupModal({ open, onOpenChange, users, onGroupCreated }: 
                                                     <AvatarFallback className="text-xs">
                                                         {user.name
                                                             .split(" ")
-                                                            .map((n) => n[0])
+                                                            .map((n: string) => n[0])
                                                             .join("")}
                                                     </AvatarFallback>
                                                 </Avatar>
@@ -134,18 +146,17 @@ export function CreateGroupModal({ open, onOpenChange, users, onGroupCreated }: 
                                     <div
                                         key={user.id}
                                         className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
-                                        onClick={() => handleUserToggle(user.id)}
                                     >
                                         <Checkbox
                                             checked={selectedUserIds.includes(user.id)}
                                             disabled={user.id === 1001} // Current user always selected
-                                            onChange={() => handleUserToggle(user.id)}
+                                            onCheckedChange={() => handleUserToggle(user.id)}
                                         />
                                         <Avatar className="w-8 h-8">
                                             <AvatarFallback className="text-xs">
                                                 {user.name
                                                     .split(" ")
-                                                    .map((n) => n[0])
+                                                    .map((n: string) => n[0])
                                                     .join("")}
                                             </AvatarFallback>
                                         </Avatar>

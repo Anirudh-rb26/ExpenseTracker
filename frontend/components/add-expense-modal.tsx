@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Receipt, Plus, Loader2, Users, Calculator } from "lucide-react"
-import type { Group, User } from "@/lib/types"
+import type { Group, User } from "@/lib/type"
 import { api } from "@/lib/api"
 
 interface AddExpenseModalProps {
@@ -64,7 +64,7 @@ export function AddExpenseModal({
         if (groupId) {
             const group = groups.find((g) => g.id === Number.parseInt(groupId))
             if (group) {
-                const groupUsers = users.filter((user) => group.user_ids.includes(user.id))
+                const groupUsers = users.filter((user) => (group.user_ids || []).includes(user.id))
                 if (splitType === "equal") {
                     setSplits(groupUsers.map((user) => ({ user_id: user.id })))
                 } else {
@@ -82,7 +82,7 @@ export function AddExpenseModal({
     }, [groupId, splitType, groups, users])
 
     const selectedGroup = groups.find((g) => g.id === Number.parseInt(groupId))
-    const groupUsers = selectedGroup ? users.filter((user) => selectedGroup.user_ids.includes(user.id)) : []
+    const groupUsers = selectedGroup ? users.filter((user) => (selectedGroup.user_ids || []).includes(user.id)) : []
     const totalPercentage = splits.reduce((sum, split) => sum + (split.percentage || 0), 0)
 
     const handlePercentageChange = (userId: number, percentage: string) => {
@@ -189,9 +189,9 @@ export function AddExpenseModal({
                                     <SelectItem key={group.id} value={group.id.toString()}>
                                         <div className="flex items-center space-x-2">
                                             <Users className="w-4 h-4" />
-                                            <span>{group.name}</span>
+                                            <span>{group.name || "Unnamed Group"}</span>
                                             <span className="text-sm text-gray-500">
-                                                ({users.filter((u) => group.user_ids.includes(u.id)).length} members)
+                                                ({users.filter((u) => (group.user_ids || []).includes(u.id)).length} members)
                                             </span>
                                         </div>
                                     </SelectItem>
@@ -214,13 +214,13 @@ export function AddExpenseModal({
                                             <div className="flex items-center space-x-2">
                                                 <Avatar className="w-5 h-5">
                                                     <AvatarFallback className="text-xs">
-                                                        {user.name
+                                                        {(user.name || "?")
                                                             .split(" ")
                                                             .map((n) => n[0])
                                                             .join("")}
                                                     </AvatarFallback>
                                                 </Avatar>
-                                                <span>{user.name}</span>
+                                                <span>{user.name || "Unknown User"}</span>
                                                 {user.id === 1001 && <span className="text-sm text-gray-500">(You)</span>}
                                             </div>
                                         </SelectItem>
@@ -275,14 +275,14 @@ export function AddExpenseModal({
                                                 <div className="flex items-center space-x-3">
                                                     <Avatar className="w-8 h-8">
                                                         <AvatarFallback className="text-xs">
-                                                            {user?.name
+                                                            {(user?.name || "?")
                                                                 .split(" ")
                                                                 .map((n) => n[0])
-                                                                .join("") || "?"}
+                                                                .join("")}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <span className="font-medium">
-                                                        {user?.name}
+                                                        {user?.name || "Unknown User"}
                                                         {user?.id === 1001 && <span className="text-sm text-gray-500 ml-1">(You)</span>}
                                                     </span>
                                                 </div>
